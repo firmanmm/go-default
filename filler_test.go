@@ -59,11 +59,70 @@ func TestFill(t *testing.T) {
 			false,
 		},
 		{
+			"Given Struct With Partial Zero Value It Should Return Only Non Zero Value",
+			args{
+				&struct {
+					Name        string `default:"anonymouse"`
+					NameNonZero string `default:"subzero" default-opt:"nonzero"`
+				}{
+					NameNonZero: "Nope",
+				},
+			},
+			&struct {
+				Name        string `default:"anonymouse"`
+				NameNonZero string `default:"subzero" default-opt:"nonzero"`
+			}{
+				Name:        "anonymouse",
+				NameNonZero: "Nope",
+			},
+			false,
+		},
+		{
+			"Given Struct With Partial Zero Value It Should Return Only Non Zero Value",
+			args{
+				&struct {
+					Name  string `default:"anonymouse"`
+					NoTag string
+				}{},
+			},
+			&struct {
+				Name  string `default:"anonymouse"`
+				NoTag string
+			}{
+				Name: "anonymouse",
+			},
+			false,
+		},
+		{
+			"Given Struct With Partial Unexported Value It Should Return Only Exported Value",
+			args{
+				&struct {
+					Name   string `default:"anonymouse"`
+					hidden string `default:"subzero"`
+				}{},
+			},
+			&struct {
+				Name   string `default:"anonymouse"`
+				hidden string `default:"subzero"`
+			}{
+				Name: "anonymouse",
+			},
+			false,
+		},
+		{
 			"Given Unsuppoted Field Then It Should Fail",
 			args{
 				&struct {
 					Complex complex128 `default:"123.3"`
 				}{},
+			},
+			nil,
+			true,
+		},
+		{
+			"Given Nil Then It Should Fail",
+			args{
+				nil,
 			},
 			nil,
 			true,

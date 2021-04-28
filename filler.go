@@ -42,19 +42,32 @@ func _Fill(dataValue reflect.Value, dataType reflect.Type) error {
 			continue
 		}
 
+		optionSet := _KeySet{}
+		optionTagValue, hasOption := fieldType.Tag.Lookup("default-opt")
+		if hasOption {
+			options := strings.Split(optionTagValue, ",")
+			for _, option := range options {
+				optionSet.SetKey(option)
+			}
+		}
 		fieldValue := dataValue.Field(i)
 		if !fieldValue.CanSet() {
 			return fmt.Errorf(`Tag is defined for field name "%s" but field is unsetable`, fieldType.Name)
 		}
 
-		if err := _FillValue(fieldValue, tagValue); err != nil {
+		if err := _FillValue(fieldValue, tagValue, optionSet); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func _FillValue(value reflect.Value, tagValue string) error {
+func _FillValue(value reflect.Value, tagValue string, optionSet _KeySet) error {
+	if optionSet.HasKey("nonzero") {
+		if !value.IsZero() {
+			return nil
+		}
+	}
 	realValue := value.Interface()
 	switch realValue.(type) {
 	case time.Duration:
@@ -111,7 +124,7 @@ func _FillSlice(value reflect.Value, tagValue string) error {
 	newSlice := reflect.MakeSlice(valueType, splittedLen, splittedLen)
 	for i, split := range splitted {
 		currentValue := newSlice.Index(i)
-		if err := _FillValue(currentValue, split); err != nil {
+		if err := _FillValue(currentValue, split, _KeySet{}); err != nil {
 			return nil
 		}
 	}
