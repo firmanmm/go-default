@@ -54,7 +54,6 @@ func _Fill(dataValue reflect.Value, dataType reflect.Type) error {
 		if !fieldValue.CanSet() {
 			return fmt.Errorf(`Tag is defined for field name "%s" but field is unsetable`, fieldType.Name)
 		}
-
 		if err := _FillValue(fieldValue, tagValue, optionSet); err != nil {
 			return err
 		}
