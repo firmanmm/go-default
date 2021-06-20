@@ -78,11 +78,10 @@ func _Fill(dataValue reflect.Value, dataType reflect.Type, flag uint) error {
 }
 
 func _FillValue(value reflect.Value, fieldType reflect.StructField, tagValue string, optionSet _KeySet) error {
-	if optionSet.HasKey("nonzero") {
-		if !value.IsZero() {
-			return nil
-		}
+	if !value.IsZero() {
+		return nil
 	}
+
 	realValue := value.Interface()
 	switch realValue.(type) {
 	case time.Duration:

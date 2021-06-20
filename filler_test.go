@@ -68,7 +68,7 @@ func TestFill(t *testing.T) {
 			args{
 				&struct {
 					Name        string `default:"anonymouse"`
-					NameNonZero string `default:"subzero" default-opt:"nonzero"`
+					NameNonZero string `default:"subzero"`
 				}{
 					NameNonZero: "Nope",
 				},
@@ -76,7 +76,7 @@ func TestFill(t *testing.T) {
 			},
 			&struct {
 				Name        string `default:"anonymouse"`
-				NameNonZero string `default:"subzero" default-opt:"nonzero"`
+				NameNonZero string `default:"subzero"`
 			}{
 				Name:        "anonymouse",
 				NameNonZero: "Nope",
