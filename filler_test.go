@@ -32,6 +32,7 @@ func TestFill(t *testing.T) {
 					Uints       []uint        `default:"0,1,2"`
 					Floats      []float64     `default:"111.111,222.222,333.333"`
 					Duration    time.Duration `default:"1m10s"`
+					Bool        bool
 				}{},
 				0,
 			},
@@ -46,6 +47,7 @@ func TestFill(t *testing.T) {
 				Uints       []uint        `default:"0,1,2"`
 				Floats      []float64     `default:"111.111,222.222,333.333"`
 				Duration    time.Duration `default:"1m10s"`
+				Bool        bool
 			}{
 				Name:        "anonymouse",
 				LuckyNumber: -13,
@@ -57,6 +59,7 @@ func TestFill(t *testing.T) {
 				Uints:       []uint{0, 1, 2},
 				Floats:      []float64{111.111, 222.222, 333.333},
 				Duration:    70 * time.Second,
+				Bool:        false,
 			},
 			false,
 		},
@@ -113,6 +116,17 @@ func TestFill(t *testing.T) {
 				Name: "anonymouse",
 			},
 			false,
+		},
+		{
+			"Given Boolean Field Then It Should Fail",
+			args{
+				&struct {
+					BoolData bool `default:"true"`
+				}{},
+				0,
+			},
+			nil,
+			true,
 		},
 		{
 			"Given Unsuppoted Field Then It Should Fail",

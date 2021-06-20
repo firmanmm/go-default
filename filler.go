@@ -70,14 +70,14 @@ func _Fill(dataValue reflect.Value, dataType reflect.Type, flag uint) error {
 		if !fieldValue.CanSet() {
 			return fmt.Errorf(`Tag is defined for field name "%s" but field is unsetable`, fieldType.Name)
 		}
-		if err := _FillValue(fieldValue, tagValue, optionSet); err != nil {
+		if err := _FillValue(fieldValue, fieldType, tagValue, optionSet); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func _FillValue(value reflect.Value, tagValue string, optionSet _KeySet) error {
+func _FillValue(value reflect.Value, fieldType reflect.StructField, tagValue string, optionSet _KeySet) error {
 	if optionSet.HasKey("nonzero") {
 		if !value.IsZero() {
 			return nil
@@ -123,23 +123,23 @@ func _FillValue(value reflect.Value, tagValue string, optionSet _KeySet) error {
 		}
 		value.SetFloat(val)
 	case reflect.Array, reflect.Slice:
-		if err := _FillSlice(value, tagValue); err != nil {
+		if err := _FillSlice(value, fieldType, tagValue); err != nil {
 			return err
 		}
 	default:
-		return fmt.Errorf(`Unsupported Value Given for field name "%s"`, value.Type().Name())
+		return fmt.Errorf(`Unsupported Value Given for field name "%s"`, fieldType.Name)
 	}
 	return nil
 }
 
-func _FillSlice(value reflect.Value, tagValue string) error {
+func _FillSlice(value reflect.Value, fieldType reflect.StructField, tagValue string) error {
 	valueType := value.Type()
 	splitted := strings.Split(tagValue, ",")
 	splittedLen := len(splitted)
 	newSlice := reflect.MakeSlice(valueType, splittedLen, splittedLen)
 	for i, split := range splitted {
 		currentValue := newSlice.Index(i)
-		if err := _FillValue(currentValue, split, _KeySet{}); err != nil {
+		if err := _FillValue(currentValue, fieldType, split, _KeySet{}); err != nil {
 			return nil
 		}
 	}
