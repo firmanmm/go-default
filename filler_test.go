@@ -10,6 +10,7 @@ import (
 func TestFill(t *testing.T) {
 	type args struct {
 		data interface{}
+		flag uint
 	}
 	tests := []struct {
 		name    string
@@ -32,6 +33,7 @@ func TestFill(t *testing.T) {
 					Floats      []float64     `default:"111.111,222.222,333.333"`
 					Duration    time.Duration `default:"1m10s"`
 				}{},
+				0,
 			},
 			&struct {
 				Name        string        `default:"anonymouse"`
@@ -67,6 +69,7 @@ func TestFill(t *testing.T) {
 				}{
 					NameNonZero: "Nope",
 				},
+				0,
 			},
 			&struct {
 				Name        string `default:"anonymouse"`
@@ -84,6 +87,7 @@ func TestFill(t *testing.T) {
 					Name  string `default:"anonymouse"`
 					NoTag string
 				}{},
+				0,
 			},
 			&struct {
 				Name  string `default:"anonymouse"`
@@ -100,6 +104,7 @@ func TestFill(t *testing.T) {
 					Name   string `default:"anonymouse"`
 					hidden string `default:"subzero"`
 				}{},
+				0,
 			},
 			&struct {
 				Name   string `default:"anonymouse"`
@@ -115,6 +120,7 @@ func TestFill(t *testing.T) {
 				&struct {
 					Complex complex128 `default:"123.3"`
 				}{},
+				0,
 			},
 			nil,
 			true,
@@ -123,14 +129,46 @@ func TestFill(t *testing.T) {
 			"Given Nil Then It Should Fail",
 			args{
 				nil,
+				0,
 			},
 			nil,
 			true,
 		},
+		{
+			"Given Recursive Flag It Should Succeed",
+			args{
+				&struct {
+					Name       string `default:"anonymouse"`
+					hidden     string `default:"subzero"`
+					Recurrence struct {
+						RecurName   string `default:"recur-anonymouse"`
+						recurHidded string `default:"recur-subzero"`
+					}
+				}{},
+				RECURSIVE,
+			},
+			&struct {
+				Name       string `default:"anonymouse"`
+				hidden     string `default:"subzero"`
+				Recurrence struct {
+					RecurName   string `default:"recur-anonymouse"`
+					recurHidded string `default:"recur-subzero"`
+				}
+			}{
+				Name: "anonymouse",
+				Recurrence: struct {
+					RecurName   string `default:"recur-anonymouse"`
+					recurHidded string `default:"recur-subzero"`
+				}{
+					RecurName: "recur-anonymouse",
+				},
+			},
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := Fill(tt.args.data)
+			err := Fill(tt.args.data, tt.args.flag)
 			if tt.wantErr {
 				assert.Error(t, err)
 				return

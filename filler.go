@@ -9,8 +9,12 @@ import (
 	"time"
 )
 
+const (
+	RECURSIVE = 1
+)
+
 // Fill will fill given struct with it's default value
-func Fill(data interface{}) error {
+func Fill(data interface{}, flag uint) error {
 	if data == nil {
 		return ErrNilValue
 	}
@@ -21,22 +25,35 @@ func Fill(data interface{}) error {
 		dataValue = reflect.ValueOf(data)
 	}
 
-	switch dataValue.Kind() {
-	case reflect.Interface, reflect.Ptr:
-		return Fill(dataValue.Elem())
-	default:
-		return _Fill(dataValue, dataValue.Type())
+	indirectData := _FollowIndirection(dataValue)
+	if indirectData == nil {
+		return nil
 	}
+	dataValue = *indirectData
+
+	if dataValue.Kind() != reflect.Struct {
+		return ErrUnsupportedValue
+	}
+	return _Fill(dataValue, dataValue.Type(), flag)
 }
 
-func _Fill(dataValue reflect.Value, dataType reflect.Type) error {
+func _Fill(dataValue reflect.Value, dataType reflect.Type, flag uint) error {
 	numField := dataValue.NumField()
 	for i := 0; i < numField; i++ {
+
 		fieldType := dataType.Field(i)
 		// Check if field is exported
 		if fieldName := fieldType.Name[0]; fieldName < 'A' || fieldName > 'Z' {
 			continue
 		}
+
+		fieldValue := dataValue.Field(i)
+		if (flag & RECURSIVE) > 0 {
+			if err := Fill(fieldValue, flag); err != nil && err != ErrUnsupportedValue {
+				return err
+			}
+		}
+
 		tagValue, hasTag := fieldType.Tag.Lookup("default")
 		if !hasTag {
 			continue
@@ -50,7 +67,6 @@ func _Fill(dataValue reflect.Value, dataType reflect.Type) error {
 				optionSet.SetKey(option)
 			}
 		}
-		fieldValue := dataValue.Field(i)
 		if !fieldValue.CanSet() {
 			return fmt.Errorf(`Tag is defined for field name "%s" but field is unsetable`, fieldType.Name)
 		}
@@ -130,4 +146,16 @@ func _FillSlice(value reflect.Value, tagValue string) error {
 	value.Set(newSlice)
 	return nil
 
+}
+
+func _FollowIndirection(dataValue reflect.Value) *reflect.Value {
+	switch dataValue.Kind() {
+	case reflect.Interface, reflect.Ptr:
+		if dataValue.IsNil() {
+			return nil
+		}
+		return _FollowIndirection(dataValue.Elem())
+	default:
+		return &dataValue
+	}
 }
