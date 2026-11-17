@@ -18,7 +18,14 @@ func TestGenerateCode(t *testing.T) {
 		wantOut string
 		wantErr bool
 	}{
-		// TODO: Add test cases.
+		{
+			"Given Struct With Boolean Fields It Should Generate Boolean Defaults",
+			args{
+				&boolExample{},
+			},
+			"func (b *boolExample) Default() {\n\tb.Bool = true\n\tif b.BoolSkipped == false {\n\t\tb.BoolSkipped = true\n\t}\n}",
+			false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -32,6 +39,11 @@ func TestGenerateCode(t *testing.T) {
 			}
 		})
 	}
+}
+
+type boolExample struct {
+	Bool        bool `default:"true"`
+	BoolSkipped bool `default:"true" default-opt:"nonzero"`
 }
 
 func ExampleGenerateCode() {

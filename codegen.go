@@ -159,17 +159,21 @@ func (c *_CodeGenerator) _GenerateCodeValue(value reflect.Value, structField ref
 		if err != nil {
 			return err
 		}
-		if err := c.WriteString("[]byte { "); err != nil {
+		if err := c.WriteString("[]byte {"); err != nil {
 			return err
 		}
 		if err := c.BeginBlock(func(c *_CodeGenerator) error {
 			for i, data := range res {
-				if i > 0 && i%10 == 0 {
-					if err := c.NewLine(); err != nil {
+				if i > 0 {
+					if i%10 == 0 {
+						if err := c.NewLine(); err != nil {
+							return err
+						}
+					} else if err := c.WriteSpace(); err != nil {
 						return err
 					}
 				}
-				if err := c.Writef("0x%x, ", data); err != nil {
+				if err := c.Writef("0x%x,", data); err != nil {
 					return err
 				}
 			}
@@ -201,6 +205,12 @@ func (c *_CodeGenerator) _GenerateCodeValue(value reflect.Value, structField ref
 			return err
 		}
 		return c.Writef(`%f`, val)
+	case reflect.Bool:
+		val, err := strconv.ParseBool(tagValue)
+		if err != nil {
+			return err
+		}
+		return c.Writef(`%t`, val)
 	case reflect.Array, reflect.Slice:
 		return c._GenerateSliceValue(value, structField, tagValue, optionSet)
 	default:
@@ -222,7 +232,7 @@ func (c *_CodeGenerator) _GenerateSliceValue(value reflect.Value, structField re
 			if err := c._GenerateCodeValue(dummyValue, structField, split, _KeySet{}); err != nil {
 				return nil
 			}
-			if err := c.WriteString(", "); err != nil {
+			if err := c.WriteString(","); err != nil {
 				return err
 			}
 			if i < len(splitted)-1 {
@@ -247,6 +257,8 @@ func (c *_CodeGenerator) _ExecuteFlag(value reflect.Value, structField reflect.S
 			zeroValStr = `""`
 		case reflect.Slice, reflect.Array:
 			zeroValStr = `nil`
+		case reflect.Bool:
+			zeroValStr = `false`
 		default:
 			zeroValStr = `0`
 		}

@@ -121,6 +121,12 @@ func _FillValue(value reflect.Value, fieldType reflect.StructField, tagValue str
 			return err
 		}
 		value.SetFloat(val)
+	case reflect.Bool:
+		val, err := strconv.ParseBool(tagValue)
+		if err != nil {
+			return err
+		}
+		value.SetBool(val)
 	case reflect.Array, reflect.Slice:
 		if err := _FillSlice(value, fieldType, tagValue); err != nil {
 			return err

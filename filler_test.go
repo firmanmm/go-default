@@ -118,15 +118,36 @@ func TestFill(t *testing.T) {
 			false,
 		},
 		{
-			"Given Boolean Field Then It Should Fail",
+			"Given Boolean Field With Zero Value It Should Return It Filled",
 			args{
 				&struct {
 					BoolData bool `default:"true"`
 				}{},
 				0,
 			},
-			nil,
-			true,
+			&struct {
+				BoolData bool `default:"true"`
+			}{
+				BoolData: true,
+			},
+			false,
+		},
+		{
+			"Given Boolean Field With Non Zero Value It Should Preserve It",
+			args{
+				&struct {
+					BoolData bool `default:"false"`
+				}{
+					BoolData: true,
+				},
+				0,
+			},
+			&struct {
+				BoolData bool `default:"false"`
+			}{
+				BoolData: true,
+			},
+			false,
 		},
 		{
 			"Given Unsuppoted Field Then It Should Fail",
